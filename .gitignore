@@ -28,6 +28,9 @@ coverage
 # ide files
 .idea
 
+# images directory
+images/
+
 # Grunt intermediate storage (https://gruntjs.com/creating-plugins#storing-task-files)
 .grunt
 
