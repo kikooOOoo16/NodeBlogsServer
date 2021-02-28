@@ -24,7 +24,7 @@ const storage = multer.diskStorage({
         const ext = MIME_TYPE_MAP[file.mimetype];
         cb(null, name + '-' + Date.now() + '.' + ext);
     }
-})
+});
 
 router.post('', multer({storage: storage}).single('image'), (req, res, next) => {
     const url = req.protocol + '://' + req.get('host'); // construct url to server
@@ -58,7 +58,6 @@ router.put('/:id', multer({storage: storage}).single('image'),
             content: req.body.content,
             imageUrl: imageUrl
         });
-        console.log(post);
         Post.updateOne({_id: req.params.id}, post).then(result => {
             console.log(result);
             res.status(200).json({message: 'Update successful.'});
@@ -66,14 +65,25 @@ router.put('/:id', multer({storage: storage}).single('image'),
 });
 
 router.get('',(req, res, next) => {
-    Post.find()
-        .then(documents => {
-            console.log(documents);
-            res.status(200).json({
-                message: 'Posts fetched successfully.',
-                posts: documents
-            });
+    const pageSize = +req.query.pageSize;
+    const currentPage = +req.query.page;
+    const postQuery = Post.find(); // executes after we call then
+    let fetchedPosts;
+    if (pageSize && currentPage) {
+        postQuery
+            .skip((currentPage - 1) * pageSize)
+            .limit(pageSize);
+    }
+    postQuery.then(documents => {
+        fetchedPosts = documents;
+        return Post.count();
+    }).then(count => {
+        res.status(200).json({
+            message: 'Posts fetched successfully.',
+            posts: fetchedPosts,
+            numOfPosts: count
         });
+    });
 });
 
 router.get('/:id', (req, res, next) => {
