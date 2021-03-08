@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const Post = require('../models/post');
+const middleware = require('../middleware/middleware');
 
 const router = express.Router();
 
@@ -26,7 +27,7 @@ const storage = multer.diskStorage({
     }
 });
 
-router.post('', multer({storage: storage}).single('image'), (req, res, next) => {
+router.post('', middleware.checkAuth, multer({storage: storage}).single('image'), (req, res, next) => {
     const url = req.protocol + '://' + req.get('host'); // construct url to server
     const post = new Post({
         title: req.body.title,
@@ -45,7 +46,7 @@ router.post('', multer({storage: storage}).single('image'), (req, res, next) => 
     });
 });
 
-router.put('/:id', multer({storage: storage}).single('image'),
+router.put('/:id', middleware.checkAuth, multer({storage: storage}).single('image'),
     (req, res, next) => {
         let imageUrl = req.body.imageUrl;
         if (req.file) {
@@ -76,7 +77,7 @@ router.get('',(req, res, next) => {
     }
     postQuery.then(documents => {
         fetchedPosts = documents;
-        return Post.count();
+        return Post.countDocuments();
     }).then(count => {
         res.status(200).json({
             message: 'Posts fetched successfully.',
@@ -96,7 +97,7 @@ router.get('/:id', (req, res, next) => {
     });
 });
 
-router.delete('/:id', (req, res, next) => {
+router.delete('/:id', middleware.checkAuth, (req, res, next) => {
     console.log(req.params.id);
     Post.deleteOne({_id: req.params.id})
         .then(responseData => {

@@ -2,12 +2,18 @@ const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const dotenv = require('dotenv');
 
 const postsRoutes = require('./routes/posts');
+const authRoutes = require('./routes/auth');
 const app = express();
 
+const result = dotenv.config();
+if (result.error) {
+    throw result.error
+}
 
-mongoose.connect('mongodb+srv://Kristijan:UY57Wjr9KMTUjkII@cluster0.jhhwb.mongodb.net/node-angular?retryWrites=true&w=majority',
+mongoose.connect(process.env.MONGODB_ATLAS_URL,
     {useNewUrlParser: true, useUnifiedTopology: true})
     .then(() => {
         console.log('Connected to DB!')
@@ -26,7 +32,7 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader(
         'Access-Control-Allow-Headers',
-        'Origin, X-Requested-With, Content-Type, Accept'
+        'Origin, X-Requested-With, Content-Type, Accept, Authorization'
     );
     res.setHeader(
         'Access-Control-Allow-Methods',
@@ -36,5 +42,6 @@ app.use((req, res, next) => {
 });
 
 app.use('/posts', postsRoutes);
+app.use('/auth', authRoutes);
 
 module.exports = app;
