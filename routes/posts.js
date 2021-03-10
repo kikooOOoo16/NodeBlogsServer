@@ -44,6 +44,10 @@ router.post('', middleware.checkAuth, multer({storage: storage}).single('image')
                 id: createdPost._id
             }
         });
+    }).catch(error => {
+        res.status(500).json({
+            message: 'Post creation failed!'
+        });
     });
 });
 
@@ -66,9 +70,13 @@ router.put('/:id', middleware.checkAuth, multer({storage: storage}).single('imag
                 if (result.n > 0) {
                     res.status(200).json({message: 'Update successful.'});
                 } else {
-                    res.status(401).json({message: 'Unauthorised access.'});
+                    res.status(401).json({message: 'Unauthorised action!'});
                 }
-            });
+            }).catch(error => {
+            res.status(500).json({
+                message: 'Post update failed!'
+            })
+        });
 });
 
 router.get('',(req, res, next) => {
@@ -90,6 +98,10 @@ router.get('',(req, res, next) => {
             posts: fetchedPosts,
             numOfPosts: count
         });
+    }).catch(error => {
+        res.status(500).json({
+            message: 'Couldn\'t fetch posts!'
+        });
     });
 });
 
@@ -100,19 +112,26 @@ router.get('/:id', (req, res, next) => {
         } else {
             res.status(404).json({message: 'Post not found.'});
         }
+    }).catch(error => {
+        res.status(500).json({
+            message: 'Couldn\'t fetch post!'
+        });
     });
 });
 
 router.delete('/:id', middleware.checkAuth, (req, res, next) => {
-    console.log(req.params.id);
     Post.deleteOne({_id: req.params.id, author: req.userData.userId})
         .then(result => {
             if (result.n > 0) {
                 res.status(200).json({message: 'Deleted successfully.'});
             } else {
-                res.status(401).json({message: 'Unauthorised access.'});
+                res.status(401).json({message: 'Unauthorised access!'});
             }
-        })
+        }).catch(error => {
+        res.status(500).json({
+            message: 'Couldn\'t delete post!'
+        });
+    });
 });
 
 module.exports = router;
