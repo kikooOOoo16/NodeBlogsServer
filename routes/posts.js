@@ -32,7 +32,8 @@ router.post('', middleware.checkAuth, multer({storage: storage}).single('image')
     const post = new Post({
         title: req.body.title,
         content: req.body.content,
-        imageUrl: url + '/images/' + req.file.filename
+        imageUrl: url + '/images/' + req.file.filename,
+        author: req.userData.userId
     });
     post.save().then(createdPost => {
         console.log(createdPost);
@@ -57,12 +58,17 @@ router.put('/:id', middleware.checkAuth, multer({storage: storage}).single('imag
             _id: req.params.id,
             title: req.body.title,
             content: req.body.content,
-            imageUrl: imageUrl
+            imageUrl: imageUrl,
+            author: req.userData.userId
         });
-        Post.updateOne({_id: req.params.id}, post).then(result => {
-            console.log(result);
-            res.status(200).json({message: 'Update successful.'});
-        });
+        Post.updateOne({_id: req.params.id, author: req.userData.userId}, post)
+            .then(result => {
+                if (result.n > 0) {
+                    res.status(200).json({message: 'Update successful.'});
+                } else {
+                    res.status(401).json({message: 'Unauthorised access.'});
+                }
+            });
 });
 
 router.get('',(req, res, next) => {
@@ -99,9 +105,13 @@ router.get('/:id', (req, res, next) => {
 
 router.delete('/:id', middleware.checkAuth, (req, res, next) => {
     console.log(req.params.id);
-    Post.deleteOne({_id: req.params.id})
-        .then(responseData => {
-            res.status(200).json({message: responseData});
+    Post.deleteOne({_id: req.params.id, author: req.userData.userId})
+        .then(result => {
+            if (result.n > 0) {
+                res.status(200).json({message: 'Deleted successfully.'});
+            } else {
+                res.status(401).json({message: 'Unauthorised access.'});
+            }
         })
 });
 
